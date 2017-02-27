@@ -25,10 +25,9 @@ local function main()
   _G.logger = onmt.utils.Logger.new(opt.log_file, opt.disable_logs, opt.log_level)
 
   local Vocabulary = onmt.data.Vocabulary
-  local data = { dataType=dataType }
 
-  data.dicts = {}
-  data.dicts.src = Vocabulary.init('train',
+  local dicts = {}
+  dicts.src = Vocabulary.init('train',
                                    opt.data,
                                    opt.vocab,
                                    opt.vocab_size,
@@ -40,7 +39,7 @@ local function main()
   local unicode = require('tools.utils.unicode')
   local reader = onmt.utils.FileReader.new(opt.data)
   local new_corpusfile = assert(io.open(opt.save_data, 'w'))
-  
+
   local linecount = 1
   while true do
     local tokens = reader:next()
@@ -55,9 +54,9 @@ local function main()
     end
 
     if isValid(tokens) then
-      local words, feats = onmt.utils.Features.extract(tokens)
+      local words, _ = onmt.utils.Features.extract(tokens)
 
-      local idxed_words = data.dicts.src.words:convertToIdx(words, onmt.Constants.UNK_WORD)
+      local idxed_words = dicts.src.words:convertToIdx(words, onmt.Constants.UNK_WORD)
 
       for i = 1, idxed_words:storage():size() do
         local a_word = words[i]
@@ -65,9 +64,9 @@ local function main()
           local new_a_word = ''
           -- break into character sequence with some markers
           local t = 1
-          for v, c, nextv, nextc in unicode.utf8_iter(a_word) do
+          for _, c, _, nextc in unicode.utf8_iter(a_word) do
             if t == 1 then
-              new_a_word = '<B>' .. c 
+              new_a_word = '<B>' .. c
             elseif nextc == nil then
               new_a_word = new_a_word .. ' <E>' .. c
             else
@@ -87,7 +86,7 @@ local function main()
           else
             new_corpusfile:write(a_word)
           end
-        end 
+        end
       end
       -- write <LF> into opt.save_data
       new_corpusfile:write('\n')
