@@ -26,29 +26,24 @@ require 'xavante.httpd'
 
 require('onmt.init')
 
-local cmd = torch.CmdLine()
+local cmd = onmt.utils.ExtendedCmdLine.new('xmlrpc_translation_server.lua')
 
 -- translator를 밖으로 빼놓음
 local translator
 
-cmd:text("")
-cmd:text("**onmt.xmlrpc-translation_server**")
-cmd:text("")
-
-cmd:option('-config', '', [[Read options from this file]])
 onmt.translate.Translator.declareOpts(cmd)
-
-cmd:option('-host', '*', [[Host to run the server on]])
-cmd:option('-port', '8020', [[Port to run the server on]])
-cmd:option('-extra_digit', 'false', [[If it enabled, comma between numerics will be omitted.]])
-cmd:text("")
-cmd:text("**Other options**")
-cmd:text("")
-cmd:option('-gpuid', -1, [[ID of the GPU to use (-1 = use CPU, 0 = let cuda choose between available GPUs)]])
-cmd:option('-fallback_to_cpu', false, [[If = true, fallback to CPU if no GPU available]])
 
 onmt.utils.Cuda.declareOpts(cmd)
 onmt.utils.Logger.declareOpts(cmd)
+
+cmd:text("")
+cmd:text("** Server options **")
+cmd:text("")
+
+cmd:option('-config', '', [[Read options from this file]])
+cmd:option('-host', '*', [[Host to run the server on]])
+cmd:option('-port', '8020', [[Port to run the server on]])
+cmd:option('-extra_digit', 'false', [[If it enabled, comma between numerics will be omitted.]])
 
 -- XML-RPC WSAPI Handler
 function wsapi_handler(wsapi_env)
@@ -233,11 +228,7 @@ local function main()
   print('XML-RPC Server for OpenNMT, by ETRI Language Intelligence Research Group. 2016.')
 
   local opt = cmd:parse(arg)
-  local requiredOptions = {
-    "model"
-  }
 
-  onmt.utils.Opt.init(opt, requiredOptions)
   _G.logger = onmt.utils.Logger.new(opt.log_file, opt.disable_logs, opt.log_level)
 
   _G.logger:info("Initializing NMT Model, Please wait for a while...")
